@@ -13,9 +13,9 @@
 #define ZONE_1 1 //  recovery watts - violet 
 #define ZONE_2 125 // endurance - blue
 #define ZONE_3 160 // tempo - green
-#define ZONE_4 210 // threshold - yellow
-#define ZONE_5 270 // aerobic - orange
-#define ZONE_6 370 // nm - red
+#define ZONE_4 212 // threshold - yellow
+#define ZONE_5 273 // aerobic - orange
+#define ZONE_6 380 // nm - red
 
 //LED control
 #define LED_PIN 25
