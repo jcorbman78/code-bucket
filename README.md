@@ -1,64 +1,38 @@
-<header>
+# powerleds
+You need to define the following : (look for them in the code).
 
-<!--
-  <<< Author notes: Course header >>>
-  Include a 1280×640 image, course title in sentence case, and a concise description in emphasis.
-  In your repository settings: enable template repository, add your 1280×640 social image, auto delete head branches.
-  Add your open source license, GitHub uses MIT license.
--->
+// Thresholds for your Power Zones
 
-# Introduction to GitHub
+#define ZONE_1 1 //  recovery watts - violet 
 
-_Get started using GitHub in less than an hour._
+#define ZONE_2 125 // endurance - blue
 
-</header>
+#define ZONE_3 160 // tempo - green
 
-<!--
-  <<< Author notes: Finish >>>
-  Review what we learned, ask for feedback, provide next steps.
--->
+#define ZONE_4 210 // threshold - yellow
 
-## Finish
+#define ZONE_5 270 // aerobic - orange
 
-_Congratulations, you've completed this course and joined the world of developers!_
+#define ZONE_6 370 // nm - red
 
-<img src=https://octodex.github.com/images/collabocats.jpg alt=celebrate width=300 align=right>
+//LED control - Number of LEDS in your strip and the GPIO pin connected to the DATA input of the strip.
 
-Here's a recap of your accomplishments:
+#define LED_PIN 25
 
-- You learned about GitHub, repositories, branches, commits, and pull requests.
-- You created a branch, a commit, and a pull request.
-- You merged a pull request.
-- You made your first contribution! :tada:
+#define NUM_LEDS 30
 
-### What's next?
+//Set here the specific address of the powermeter you want use. (You need to do a bluetooth search for it).
 
-If you'd like to make a profile README, use the quickstart instructions below or follow the instructions in the [Managing your profile README](https://docs.github.com/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/managing-your-profile-readme) article.
+#define MY_BLE_ADDRESS "ce:01:fb:7f:d6:b1"  //address of the powermeter we want to use
 
-1. Make a new public repository with a name that matches your GitHub username.
-2. Create a file named `README.md` in its root. The "root" means not inside any folder in your repository.
-3. Edit the contents of the `README.md` file.
-4. If you created a new branch for your file, open and merge a pull request on your branch.
-5. Lastly, we'd love to hear what you thought of this course [in our discussion board](https://github.com/orgs/skills/discussions/categories/introduction-to-github).
+If you want to connect to any available powermeter : replace line on line 25
 
-Check out these resources to learn more or get involved:
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID) && Scaned_BLE_Address == MY_BLE_ADDRESS ) {
+with this : 
 
-- Are you a student? Check out the [Student Developer Pack](https://education.github.com/pack).
-- [Take another GitHub Skills course](https://github.com/skills).
-- [Read the GitHub Getting Started docs](https://docs.github.com/en/get-started).
-- To find projects to contribute to, check out [GitHub Explore](https://github.com/explore).
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID) ) {
 
-<footer>
 
-<!--
-  <<< Author notes: Footer >>>
-  Add a link to get support, GitHub status page, code of conduct, license link.
--->
 
----
 
-Get help: [Post in our discussion board](https://github.com/orgs/skills/discussions/categories/introduction-to-github) &bull; [Review the GitHub status page](https://www.githubstatus.com/)
 
-&copy; 2024 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
-
-</footer>
