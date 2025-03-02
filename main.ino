@@ -30,7 +30,7 @@ static int power2;
 #define CYCLING_POWER_SERVICE_UUID "00001818-0000-1000-8000-00805F9B34FB"
 #define POWER_CHARACTERISTIC_UUID "00002A63-0000-1000-8000-00805F9B34FB"
 
-#define MY_BLE_ADDRESS "ce:01:fb:7f:d6:b1"  //address of the powermeter we want to use
+#define MY_BLE_ADDRESS "C9:35:6D:0D:51:03"  //address of the powermeter we want to use
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID(CYCLING_POWER_SERVICE_UUID);
