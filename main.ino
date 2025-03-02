@@ -19,7 +19,7 @@
 
 //LED control
 #define LED_PIN 25
-#define NUM_LEDS 30
+#define NUM_LEDS 144
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
