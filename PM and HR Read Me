@@ -1,0 +1,67 @@
+# ESP32 Dual LED Project: Heart Rate and Power Meter Display
+
+This project uses an ESP32 microcontroller to receive Bluetooth Low Energy (BLE) data from a heart rate monitor (Wahoo TICKR HR) and a cycling power meter. It then displays this data on two separate Adafruit NeoPixel LED strips, with colors corresponding to heart rate and power zones.
+
+## Hardware Requirements
+
+* ESP32 Development Board
+* Adafruit NeoPixel LED Strip (144 LEDs or similar) - for Heart Rate
+* Adafruit NeoPixel LED Strip (144 LEDs or similar) - for Power Meter
+* Wahoo TICKR HR Heart Rate Monitor
+* Cycling Power Meter (with address C9:35:6D:0D:51:03)
+* Wiring for connections
+
+## Hardware Connections
+
+* **HR LED Strip:** Connect the data pin of the HR LED strip to GPIO pin 4 of the ESP32.
+* **Power LED Strip:** Connect the data pin of the Power LED strip to GPIO pin 5 of the ESP32.
+* **Power and Ground:** Connect the power and ground pins of both LED strips and the ESP32 appropriately.
+
+## Software Requirements
+
+* Arduino IDE
+* ESP32 board support installed in Arduino IDE
+* Libraries:
+    * BLEDevice (included with ESP32 board support)
+    * Adafruit NeoPixel Library
+
+## Installation and Setup
+
+1.  **Install Arduino IDE:** If you don't have it already, download and install the Arduino IDE from the official Arduino website.
+2.  **Install ESP32 Board Support:** In the Arduino IDE, go to `File > Preferences` and add the following URL to "Additional Board Manager URLs":
+    ```
+    [https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json](https://www.google.com/search?q=https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json)
+    ```
+    Then, go to `Tools > Board > Boards Manager`, search for "esp32", and install the "esp32 by Espressif Systems" package.
+3.  **Install Adafruit NeoPixel Library:** In the Arduino IDE, go to `Sketch > Include Library > Manage Libraries`, search for "Adafruit NeoPixel", and install the library.
+4.  **Connect Hardware:** Connect the LED strips and sensors to the ESP32 as described in the "Hardware Connections" section.
+5.  **Upload Code:**
+    * Open the `main__1_.ino` file in the Arduino IDE.
+    * Select the correct ESP32 board and port in `Tools > Board` and `Tools > Port`.
+    * Click the "Upload" button to upload the code to the ESP32.
+6.  **Activate Sensors:**
+    * Ensure your Wahoo TICKR HR is properly positioned and active.
+    * Ensure your cycling power meter is active and broadcasting data.
+7.  **Monitor Serial Output:** Open the Serial Monitor in the Arduino IDE to monitor the connection status and data received.
+
+## Code Explanation
+
+* **BLE Scanning:** The code scans for BLE devices and filters for the Wahoo TICKR HR and the specified power meter address.
+* **Connection and Data Reception:** Once the devices are found, the ESP32 connects and registers for notifications from the heart rate and power measurement characteristics.
+* **Data Processing:** The received data is processed to extract heart rate and power values.
+* **LED Display:** The heart rate and power values are mapped to predefined zones, and the LED strips are updated with corresponding colors.
+* **Retry Mechanism:** If a connection fails, the ESP32 will retry after a delay.
+
+## Customization
+
+* **LED Counts and Pins:** Modify the `HR_LED_COUNT`, `HR_LED_PIN`, `POWER_LED_COUNT`, and `POWER_LED_PIN` defines to match your LED strip configuration.
+* **Heart Rate and Power Zones:** Adjust the zone thresholds and colors in the `getHeartRateZone`, `getPowerZone`, `getHrZoneColor`, and `getPowerZoneColor` functions.
+* **Target Power Meter Address:** Change the `targetPowerAddress` to the address of your specific power meter.
+* **Scan and Retry Delays:** Modify `SCAN_TIME` and `RETRY_DELAY` to adjust the scanning and retry behavior.
+
+## Troubleshooting
+
+* **Connection Issues:** Ensure the sensors are active and close to the ESP32. Check the Serial Monitor for error messages.
+* **Incorrect LED Display:** Verify the zone thresholds and colors in the code.
+* **No Data Received:** Check the sensor batteries and ensure they are transmitting data.
+* **Compilation Errors:** Make sure you have installed the required libraries and board support.
