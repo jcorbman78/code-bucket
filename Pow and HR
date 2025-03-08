@@ -1,0 +1,194 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+#include <Adafruit_NeoPixel.h>
+
+#define HR_LED_PIN 4
+#define HR_LED_COUNT 144
+#define POWER_LED_PIN 5
+#define POWER_LED_COUNT 144
+
+#define SCAN_TIME 60
+#define RETRY_DELAY 5000
+
+#define ZONE_1 1   // recovery watts - violet
+#define ZONE_2 125 // endurance - blue
+#define ZONE_3 160 // tempo - green
+#define ZONE_4 212 // threshold - yellow
+#define ZONE_5 273 // aerobic - orange
+#define ZONE_6 380 // nm - red
+
+Adafruit_NeoPixel hrStrip(HR_LED_COUNT, HR_LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel powerStrip(POWER_LED_COUNT, POWER_LED_PIN, NEO_GRB + NEO_KHZ800);
+
+// HR Variables
+static BLEUUID hrServiceUUID("180D");
+static BLEUUID hrCharUUID("2A37");
+static boolean hrDoConnect = false;
+static boolean hrConnected = false;
+static BLERemoteCharacteristic* hrRemoteCharacteristic;
+static BLERemoteService* hrRemoteService;
+static BLEAddress* hrServerAddress;
+
+// Power Variables
+static BLEUUID powerServiceUUID("1818");
+static BLEUUID powerCharUUID("2A63");
+static boolean powerDoConnect = false;
+static boolean powerConnected = false;
+static BLERemoteCharacteristic* powerRemoteCharacteristic;
+static BLERemoteService* powerRemoteService;
+static BLEAddress* powerServerAddress;
+BLEAddress targetPowerAddress("C9:35:6D:0D:51:03");
+
+class MyClientCallback : public BLEClientCallbacks {
+  void onConnect(BLEClient* pclient) {
+    if (pclient->getAddress() == *hrServerAddress) {
+      hrConnected = true;
+      hrDoConnect = false;
+      Serial.println("HR Client Connected");
+    } else if (pclient->getAddress() == *powerServerAddress) {
+      powerConnected = true;
+      powerDoConnect = false;
+      Serial.println("Power Client Connected");
+    }
+  }
+
+  void onDisconnect(BLEClient* pclient) {
+    if (pclient->getAddress() == *hrServerAddress) {
+      hrConnected = false;
+      hrDoConnect = false;
+      Serial.println("HR Client Disconnected");
+    } else if (pclient->getAddress() == *powerServerAddress) {
+      powerConnected = false;
+      powerDoConnect = false;
+      Serial.println("Power Client Disconnected");
+    }
+  }
+};
+
+static void hrNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+  if (length > 1) {
+    int heartRate = pData[1];
+    Serial.print("Heart Rate: ");
+    Serial.println(heartRate);
+    updateHrLEDs(heartRate);
+  } else {
+    Serial.println("Error: HR data length is invalid.");
+  }
+}
+
+static void powerNotifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+  if (length >= 4) {
+    int16_t power = (pData[3] << 8) | pData[2];
+    Serial.print("Power: ");
+    Serial.println(power);
+    updatePowerLEDs(power);
+  } else {
+    Serial.println("Error: Power data length is invalid.");
+  }
+}
+
+int getHeartRateZone(int heartRate) {
+  if (heartRate <= 108) return 1;
+  if (heartRate <= 134) return 2;
+  if (heartRate <= 146) return 3;
+  if (heartRate <= 154) return 4;
+  return 5;
+}
+
+uint32_t getHrZoneColor(int zone) {
+  switch (zone) {
+    case 1: return hrStrip.Color(0, 255, 0);
+    case 2: return hrStrip.Color(0, 0, 255);
+    case 3: return hrStrip.Color(255, 255, 0);
+    case 4: return hrStrip.Color(255, 165, 0);
+    case 5: return hrStrip.Color(255, 0, 0);
+    default: return hrStrip.Color(0, 0, 0);
+  }
+}
+
+int getPowerZone(int power) {
+  if (power < ZONE_2) return 1;
+  if (power < ZONE_3) return 2;
+  if (power < ZONE_4) return 3;
+  if (power < ZONE_5) return 4;
+  if (power < ZONE_6) return 5;
+  return 6;
+}
+
+uint32_t getPowerZoneColor(int zone) {
+  switch (zone) {
+    case 1: return powerStrip.Color(138, 43, 226); // Violet
+    case 2: return powerStrip.Color(0, 0, 255);    // Blue
+    case 3: return powerStrip.Color(0, 255, 0);    // Green
+    case 4: return powerStrip.Color(255, 255, 0);  // Yellow
+    case 5: return powerStrip.Color(255, 165, 0);  // Orange
+    case 6: return powerStrip.Color(255, 0, 0);    // Red
+    default: return powerStrip.Color(0, 0, 0);
+  }
+}
+
+void updateHrLEDs(int heartRate) {
+  int zone = getHeartRateZone(heartRate);
+  uint32_t color = getHrZoneColor(zone);
+  for (int i = 0; i < HR_LED_COUNT; i++) {
+    hrStrip.setPixelColor(i, color);
+  }
+  hrStrip.show();
+}
+
+void updatePowerLEDs(int power) {
+  int zone = getPowerZone(power);
+  uint32_t color = getPowerZoneColor(zone);
+  for (int i = 0; i < POWER_LED_COUNT; i++) {
+    powerStrip.setPixelColor(i, color);
+  }
+  powerStrip.show();
+}
+
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+  void onResult(BLEAdvertisedDevice advertisedDevice) {
+    Serial.print("BLE Advertised Device found: ");
+    Serial.println(advertisedDevice.toString().c_str());
+    Serial.print("RSSI: ");
+    Serial.println(advertisedDevice.getRSSI());
+
+    std::string deviceName = advertisedDevice.getName().c_str();
+
+    if (deviceName.find("TRACKR HR") != std::string::npos) {
+      Serial.print("Wahoo TICKR HR found. address: ");
+      Serial.println(advertisedDevice.getAddress().toString().c_str());
+      hrServerAddress = new BLEAddress(advertisedDevice.getAddress());
+      hrDoConnect = true;
+    } else if (advertisedDevice.getAddress() == targetPowerAddress) {
+      Serial.print("Target Power Meter found. address: ");
+      Serial.println(advertisedDevice.getAddress().toString().c_str());
+      powerServerAddress = new BLEAddress(advertisedDevice.getAddress());
+      powerDoConnect = true;
+    }
+
+    if(hrDoConnect || powerDoConnect){
+      advertisedDevice.getScan()->stop();
+    }
+  }
+};
+
+void setup() {
+  Serial.begin(115200);
+  hrStrip.begin();
+  hrStrip.show();
+  powerStrip.begin();
+  powerStrip.show();
+  BLEDevice::init("ESP32_Dual_LED");
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(SCAN_TIME);
+}
+
+void loop() {
+  unsigned long lastScanBlink = 0;
+  const long scanBlinkInterval = 500;
+
+  if (hrDoConnect
